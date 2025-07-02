@@ -1,9 +1,9 @@
-import numpy as np
+import numpy as np # import numpy
 import yaml
 import torch
 import torchvision.transforms.functional as F
 
-from vot.region.raster import calculate_overlaps
+from vot.region.raster import calculate_overlaps  
 from vot.region.shapes import Mask
 from vot.region import RegionType
 from sam2.build_sam import build_sam2_video_predictor
@@ -17,7 +17,7 @@ config_path = Path(__file__).parent / "dam4sam_config.yaml"
 with open(config_path) as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
 
-seed = config["seed"]
+seed = config["seed"] # in config seed =0
 random.seed(seed)
 os.environ['PYTHONHASHSEED'] = str(seed)
 np.random.seed(seed)
@@ -25,7 +25,7 @@ torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 
 class DAM4SAMTracker():
-    def __init__(self, tracker_name="sam21pp-L"):
+    def __init__(self, tracker_name="sam21pp-L",device='cuda'):
         """
         Constructor for the DAM4SAM (2 or 2.1) tracking wrapper.
 
@@ -41,13 +41,13 @@ class DAM4SAMTracker():
             - "sam2pp-T": DAM4SAM (2) Hier Tiny
         """
         self.checkpoint, self.model_cfg = determine_tracker(tracker_name)
-
+        self.device=device
         # Image preprocessing parameters
         self.input_image_size = 1024       
         self.img_mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32)[:, None, None]
         self.img_std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32)[:, None, None]
         
-        self.predictor = build_sam2_video_predictor(self.model_cfg, self.checkpoint, device="cuda:0")
+        self.predictor = build_sam2_video_predictor(self.model_cfg, self.checkpoint, device=device)
         self.tracking_times = []
 
     def _prepare_image(self, img_pil):
@@ -63,7 +63,7 @@ class DAM4SAMTracker():
         self,
     ):
         """Initialize an inference state."""
-        compute_device = torch.device("cuda")
+        compute_device = torch.device(self.device)
         inference_state = {}
         inference_state["images"] = None # later add, step by step
         inference_state["num_frames"] = 0 # later add, step by step
